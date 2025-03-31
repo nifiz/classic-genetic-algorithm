@@ -30,3 +30,9 @@ It's done in a similar manner to producing offspring.
 #### 5. Rinse & Repeat
 A genetic algorithm, similarly to evolution, should run a little more than once. After all, it wasn't your grandma who has lived in primordial soup.
 In case of our project where we only were tasked with finding a global minimum for a 2 dimensional test function, around 60 epochs proved enough to give satisfactory results.
+<br><br><br>
+#### Co-authors
+- <a href="https://github.com/puechua">Aleksandra Orzech</a>
+- <a href="https://github.com/Alex555eu">Aleksander Pasich</a>
+
+The original repository is set to private, so I cannot provide a useful link.
