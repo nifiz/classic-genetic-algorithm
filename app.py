@@ -8,6 +8,19 @@ from src.util.result_storage import results_to_json
 
 st.title("Classic Genetic Algorithm Visualization")
 
+representation = st.selectbox("Chromosome Representation", ['binary', 'real'])
+# Available crossover methods depending on representation
+if representation == 'binary':
+    crossover_options = ['one_point', 'two_point', 'uniform', 'granular']
+elif representation == 'real':
+    crossover_options = ['arithmetic', 'linear', 'alpha', 'alpha_beta']
+else:
+    crossover_options = []
+
+#crossover_method = st.selectbox("Crossover Method", crossover_options)
+crossover_method = st.selectbox("Crossover Method", crossover_options, key="crossover_method")
+
+
 population_size = st.slider("Population size", min_value=50, max_value=1000, value=500)
 precision = st.slider("Precision", min_value=5, max_value=50, value=20)
 epochs = st.slider("Epochs", min_value=10, max_value=200, value=60)
@@ -18,8 +31,18 @@ offspring_percentage = st.slider("Percent of the population to produce offspring
 lower_bound = st.slider("Lower Boundary", min_value=-10.0, max_value=0.0, value=-5.0)
 upper_bound = st.slider("Upper Boundary", min_value=0.0, max_value=10.0, value=5.0)
 selection_method = st.selectbox("Selection Method", ['best', 'roulette', 'tournament'])
-crossover_method = st.selectbox("Crossover Method", ['one_point', 'two_point' , 'uniform', 'granular'])
-mutation_method = st.selectbox("Mutation Method", ['one_point', 'two_point', 'boundary'])
+#crossover_method = st.selectbox("Crossover Method", ['one_point', 'two_point' , 'uniform', 'granular'])
+#mutation_method = st.selectbox("Mutation Method", ['one_point', 'two_point', 'boundary', 'uniform', 'gaussian'])
+# Available mutation methods depending on representation
+if representation == 'binary':
+    mutation_options = ['one_point', 'two_point', 'boundary', 'uniform']
+elif representation == 'real':
+    mutation_options = ['uniform', 'gaussian']
+else:
+    mutation_options = []
+
+mutation_method = st.selectbox("Mutation Method", mutation_options, key="mutation_method")
+
 fitness_function = st.selectbox("Fitness Function", ['hypersphere', 'michalewicz'])
 mutation_rate = st.slider("Mutation Rate", min_value=0.01, max_value=0.1, value=0.05)
 elitar_percentage = st.slider("Percentage of elite individuals", min_value=0, max_value=50, value=5)
@@ -48,7 +71,8 @@ ga = GeneticAlgorithm(
     fitness_chart=fitness_chart, #line live chart
     fitness_data=fitness_data, #line live chart
     inversion_enabled=inversion_enabled,
-    elitar_percentage=elitar_percentage
+    elitar_percentage=elitar_percentage,
+    representation=representation
 )
 
 # if no calculations have been executed so far
@@ -62,7 +86,11 @@ def calculate():
 
     calculation_time = runtime_format(datetime.now() - start)
 
-    best_solution_decimal = binary_to_decimal(best_solution, upper_bound, lower_bound, precision)
+    #best_solution_decimal = binary_to_decimal(best_solution, upper_bound, lower_bound, precision)
+    if representation == 'binary':
+        best_solution_decimal = binary_to_decimal(best_solution, upper_bound, lower_bound, precision)
+    else:
+        best_solution_decimal = best_solution  # już floaty, nie trzeba dekodować
 
     fig = plot.build()
 

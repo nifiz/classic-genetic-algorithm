@@ -19,7 +19,8 @@ class GeneticAlgorithm:
                     mutation_method="one_point", fitness_function='hypersphere', 
                     mutation_rate=0.05, elitar_strategy=True, plot: Plotter3D=None,
                     fitness_chart=None, fitness_data=None,
-                    inversion_enabled=False, elitar_percentage=5):
+                    inversion_enabled=False, elitar_percentage=5,
+                    representation='binary'):
         self._population_size = population_size
         self._precision = precision
         self._epochs = epochs
@@ -39,13 +40,23 @@ class GeneticAlgorithm:
         self._inversion_operator = Inversion(mutation_rate) if inversion_enabled else None
         self._elitar_percentage = elitar_percentage
         self._elitar_strategy = ElitarStrategy(elitar_percentage) if elitar_percentage > 0 else None
+        self._representation = representation
+        representation=representation
+
 
 
 
     def run(self):
         # Initialize objects
-        population = Population(self._population_size, self._precision)
-        fitness_function = getattr(FitnessFunction(precision=self._precision, lower_bound=self._lower_bound, upper_bound=self._upper_bound), self._fitness_function, None)
+        #population = Population(self._population_size, self._precision)
+        population = Population(
+            self._population_size,
+            self._precision,
+            lower_bound=self._lower_bound,
+            upper_bound=self._upper_bound,
+            representation=self._representation
+            )
+        fitness_function = getattr(FitnessFunction(precision=self._precision, lower_bound=self._lower_bound, upper_bound=self._upper_bound, representation=self._representation), self._fitness_function, None)
         mutate = Mutate(self._mutation_rate)
 
         # Initialize 3D plot data
@@ -59,7 +70,15 @@ class GeneticAlgorithm:
             population_fitness = [fitness_function(chromo_value) for chromo_value in population.get_population_values()]
 
             # Store data for 3D plotting // x,y = zip(*[[a,b],[a,b]]) --> x = [a,a], y = [b,b]
-            x, y = zip(*[binary_to_decimal(chrom_value, self._lower_bound, self._upper_bound, self._precision) for chrom_value in population.get_population_values()])
+            #x, y = zip(*[binary_to_decimal(chrom_value, self._lower_bound, self._upper_bound, self._precision) for chrom_value in population.get_population_values()])
+            if self._representation == 'binary':
+                decoded = [binary_to_decimal(val, self._lower_bound, self._upper_bound, self._precision)
+                           for val in population.get_population_values()]
+            else:
+                 decoded = population.get_population_values()
+            
+            x, y = zip(*decoded)
+
             x_axis.extend(x)
             y_axis.extend(y)
             z_axis.extend(population_fitness)
@@ -80,12 +99,34 @@ class GeneticAlgorithm:
             for cycle in range(cycles):
                 for i in range(0, parents_len, 2):
                     # Crossover
-                    crossover = Crossover(new_population_values[i], new_population_values[i+1])
+                    #crossover = Crossover(new_population_values[i], new_population_values[i+1])
+                    #child1, child2 = getattr(crossover, self._crossover_method)()
+                    if self._representation == 'real':
+                          from .service.real_crossover import RealCrossover
+                          crossover = RealCrossover(new_population_values[i], new_population_values[i+1])
+                    else:
+                          from .service.crossover import Crossover
+                          crossover = Crossover(new_population_values[i], new_population_values[i+1])
                     child1, child2 = getattr(crossover, self._crossover_method)()
 
+
                     # Mutate
-                    chosen_mutation_method = getattr(mutate, self._mutation_method, None)
-                    child1, child2 = chosen_mutation_method(child1), chosen_mutation_method(child2)
+                    #chosen_mutation_method = getattr(mutate, self._mutation_method, None)
+                    #child1, child2 = chosen_mutation_method(child1), chosen_mutation_method(child2)
+                    # Mutate
+                    if self._representation == 'binary':
+                        chosen_mutation_method = getattr(mutate, self._mutation_method, None)
+                        child1, child2 = chosen_mutation_method(child1), chosen_mutation_method(child2)
+                    elif self._representation == 'real':
+                        if self._mutation_method == 'uniform':
+                            child1 = mutate.uniform(child1)
+                            child2 = mutate.uniform(child2)
+                        elif self._mutation_method == 'gaussian':
+                            child1 = mutate.gaussian(child1)
+                            child2 = mutate.gaussian(child2)
+                        else:
+                            raise ValueError(f"Unsupported mutation method '{self._mutation_method}' for real representation")
+
 
                     # Apply inversion if enabled
                     if self._inversion_enabled:
