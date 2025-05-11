@@ -34,5 +34,3 @@ In case of our project where we only were tasked with finding a global minimum f
 #### Co-authors
 - <a href="https://github.com/puechua">Aleksandra Orzech</a>
 - <a href="https://github.com/Alex555eu">Aleksander Pasich</a>
-
-The original repository is set to private, so I cannot provide a useful link.
